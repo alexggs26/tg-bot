@@ -1,0 +1,4 @@
+.env/
+__pycache__/
+*.log
+tg_bot/app/config.py
