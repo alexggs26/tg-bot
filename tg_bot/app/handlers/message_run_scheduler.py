@@ -1,6 +1,6 @@
-from subprocess import run
+# from tg_bot.app.scheduler import job
 
 
-async def run_scheduler():
-    run('python3 scheduler.py')
+# async def run_scheduler():
+    # job()
 

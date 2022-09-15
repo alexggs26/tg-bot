@@ -51,7 +51,7 @@ async def create_object_wialon(call: CallbackQuery, callback_data: dict):
                 label=device_name,
                 model=hw_id, 
                 client_platform=client_platform)
-            print(response)
+
             if response['code'] == 1:
                 start_ts = timegm(gmtime())
                 message_answer = await bot.send_message(chat_id=call.message.chat.id, text='Проверяю подключение...')

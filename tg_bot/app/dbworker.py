@@ -108,11 +108,20 @@ class Storage():
 
 
     @staticmethod
-    def get_client_id(client_id):
+    def get_client_id(task_id):
         query = f"""
-            SELECT sys_client_id, platform
+            SELECT crm_client_id, sys_client_id, platform
             FROM marketing.smt_clients
-            WHERE crm_client_id like '{client_id}%'
+            WHERE crm_client_id like concat(
+            (SELECT DISTINCT comp.id
+            FROM dbportal.b_crm_company AS comp
+            LEFT JOIN dbportal.b_uts_crm_invoice AS uti ON comp.id = uti.uf_company_id
+            LEFT JOIN ( 
+                SELECT value_id, substring(value, 3, 6) AS deal_id 
+                FROM dbportal.b_utm_tasks_task 
+                WHERE value like 'D%') 
+                AS deal_t ON uti.uf_deal_id = deal_t.deal_id
+            WHERE deal_t.value_id = {task_id}), '%')
         """
         result = Storage.execute_query(query, type='read_one')
         return result

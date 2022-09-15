@@ -9,6 +9,15 @@ from tg_bot.app.states import States
 from tg_bot.app.api.navixy.get_object_info import navixy_get_object_info
 from tg_bot.app.api.wialon.get_object_info import wialon_get_object_info
 from tg_bot.app.keyboard_builder import build_ok_button
+from logging import getLogger, basicConfig, INFO
+
+logger = getLogger(__name__)
+
+basicConfig(
+    level=INFO,
+    format="%(asctime)s - %(levelname)s - %(name)s - %(message)s",
+    filename="errors.log"
+)
 
 
 
@@ -53,7 +62,7 @@ async def check_device(message: Message):
             response = 'Объект с таким ID не найден в платформе мониторинга My.Stavtrack. Проверяю другую платформу...'
             await bot.send_message(chat_id=message.chat.id, text=response)
             response_wialon = wialon_get_object_info(device_id, 'stavros')
-
+            logger.error(response_wialon)
             if response_wialon['code'] == 'network_error':
                 await bot.send_message(chat_id=message.chat.id, text=response_wialon['description'], reply_markup=button_kb)
                 return None
@@ -69,7 +78,7 @@ async def check_device(message: Message):
 
                 if (response_wialon2['code'] == 'not_exist') or (response_wialon2['code'] == 'platform_error'):
                     await bot.send_message(chat_id=message.chat.id,
-                        text=f"""Объект с таким ID не найден в платформе мониторинга Online.Stavtrack.\n\nДля создания нового объекта на сервере введите ID Клиента""")
+                        text=f"""Объект с таким ID не найден в платформе мониторинга Online.Stavtrack.\n\nДля создания нового объекта на сервере введите номер заказ-наряда""")
                     Storage.set_state(message.from_user.id, States.S_ENTER_ACCOUNT_ID.value)
                     return None
                     
@@ -110,7 +119,7 @@ async def check_device(message: Message):
                             return None
                     
                     elif response_wialon2['code'] == 'send_data':
-                        await bot.send_message(chat_id=message.chat.id, text=f'{response_wialon2}', reply_markup=button_kb)
+                        await bot.send_message(chat_id=message.chat.id, text=response_wialon2['description'], reply_markup=button_kb)
                     return None
 
             else:
