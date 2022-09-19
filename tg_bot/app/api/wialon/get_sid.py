@@ -25,7 +25,9 @@ def get_sid(account):
         return message
     
     else:
+        
         if 'error' in response:
+            print(response['error'], response['reason'])
             if response['error'] in [1, 7, 8]:
                 message = f"""Ошибка платформы мониторинга Online.Stavrack - доступ запрещен. 
                 Пожалуйста, оставьте обращение в тех. поддержку!"""
@@ -40,6 +42,12 @@ def get_sid(account):
                 message = f"""Ошибка платформы мониторинга Online.Stavrack - Элемент с таким уникальным свойством зарегистрирован в другом сервисе. 
                 Пожалуйста, оставьте обращение в тех. поддержку!"""
                 return message
+            
+            if response['error'] not in [1, 5, 6, 7, 8, 1002]:
+                message = f"""Ошибка платформы мониторинга Online.Stavrack - ошибка выполнения запроса. 
+                Пожалуйста, попробуйте позднее либо оставьте обращение в тех. поддержку!"""
+                return message
+
         else:
             message = {'sid': response['eid'], 'creator_id': response['user']['id']}
             return message

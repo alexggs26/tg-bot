@@ -131,9 +131,10 @@ def wialon_get_object_info(device_id, account):
                                 location = location[0]
                                 code = 'send_data'
                                 description = f"""
-                                    Информация по объекту с ID {device_id} с платформы Online.Stavtrack:\nИмя объекта: {
-                                        name}\nДата и время последнего сообщения: {
-                                        date_signal}\nМестоположение: {location}\nПараметры:\n{parameters}
+                                    Информация по объекту с ID {device_id} с платформы Online.Stavtrack:\n\nМестоположение: {
+                                        location}\nДата и время последнего сообщения: {
+                                        date_signal}\n\nИмя объекта: {
+                                        name}\nПараметры:\n{parameters}
                                 """
                                 message = {'code': code, 'description': description}
                                 return message

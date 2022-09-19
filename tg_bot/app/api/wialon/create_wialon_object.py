@@ -34,16 +34,19 @@ def create_wialon_object(label, model, client_platform):
             response = response.json()
             if 'error' in response:
                 if response['error'] in [1, 7, 8]:
+                    code = 2
                     message = f"""Ошибка платформы мониторинга Online.Stavrack - доступ запрещен.\nПожалуйста, оставьте обращение в тех. поддержку!"""
-                    return message
+                    return {'code': code, 'message': message}
 
                 if response['error'] in [5, 6]:
+                    code = 2
                     message = f"""Ошибка платформы мониторинга Online.Stavrack - ошибка выполнения запроса.\nПожалуйста, попробуйте позднее либо оставьте обращение в тех. поддержку!"""
-                    return message
+                    return {'code': code, 'message': message}
 
                 if response['error'] == 1002:
+                    code = 2
                     message = f"""Ошибка платформы мониторинга Online.Stavrack №1002 - Элемент с таким ID зарегистрирован в другом сервисе.\nПожалуйста, оставьте обращение в тех. поддержку!"""
-                    return message
+                    return {'code': code, 'message': message}
                 
             else:
                 new_object_id = response['item']['id']    
@@ -77,29 +80,27 @@ def update_device_id(new_object_id, device_id, model, client_platform):
         if 'error' in response_update:
 
             if response_update['error'] in [1, 7, 8]:
+                code = 2
                 message = f"""Ошибка платформы мониторинга Online.Stavrack - доступ запрещен.\nПожалуйста, оставьте обращение в тех. поддержку!"""
-                return message
+                return {'code': code, 'message': message}
 
             if response_update['error'] in [5, 6]:
+                code = 2
                 message = f"""Ошибка платформы мониторинга Online.Stavrack - ошибка выполнения запроса.\nПожалуйста, попробуйте позднее либо оставьте обращение в тех. поддержку!"""
-                return message
+                return {'code': code, 'message': message}
 
             if response_update['error'] == 1002:
+                code = 2
                 message = f"""Ошибка платформы мониторинга Online.Stavrack №1002 - Элемент с таким ID зарегистрирован в другом сервисе.\nПожалуйста, оставьте обращение в тех. поддержку!"""
-                return message
+                return {'code': code, 'message': message}
 
         else:
             return response_update['uid']
 
 
 def update_access_item(client_sys_id, item_id, client_platform):
-    if client_platform == 'stavros':
-        mgr_platfrom = 'stavros_mgr'
-    
-    elif client_platform == 'stavros2':
-        mgr_platfrom = 'stavros_mgr2'
 
-    sid = get_sid(mgr_platfrom)
+    sid = get_sid(client_platform)
     sid = sid['sid']
     data_update_item_access = {
         "userId": client_sys_id,
@@ -126,32 +127,32 @@ def update_access_item(client_sys_id, item_id, client_platform):
     else:
         response_update_access = response_update_access.json()
         if 'error' in response_update_access:
+            print(response_update_access)
 
             if response_update_access['error'] in [1, 7, 8]:
+                code = 2
                 message = f"""Ошибка платформы мониторинга Online.Stavrack - доступ запрещен.\nПожалуйста, оставьте обращение в тех. поддержку!"""
-                return message
+                return {'code': code, 'message': message}
 
             if response_update_access['error'] in [5, 6]:
+                code = 2
                 message = f"""Ошибка платформы мониторинга Online.Stavrack - ошибка выполнения запроса.\nПожалуйста, попробуйте позднее либо оставьте обращение в тех. поддержку!"""
-                return message
+                return {'code': code, 'message': message}
 
             if response_update_access['error'] == 1002:
+                code = 2
                 message = f"""Ошибка платформы мониторинга Online.Stavrack №1002 - Элемент с таким ID зарегистрирован в другом сервисе.\nПожалуйста, оставьте обращение в тех. поддержку!"""
-                return message
+                return {'code': code, 'message': message}
 
         else:
+             code = 1
              message = 'OK'
-             return message    
+             return {'code': code, 'message': message}    
 
 
 def migrate_object(item_id, client_account_id, client_platform):
-    if client_platform == 'stavros':
-        mgr_platfrom = 'stavros_mgr'
 
-    elif client_platform == 'stavros2':
-        mgr_platfrom = 'stavros_mgr2'
-
-    sid = get_sid(mgr_platfrom)
+    sid = get_sid(client_platform)
     sid = sid['sid']
     data_migrate_object = {
         "itemId": item_id,
@@ -175,24 +176,31 @@ def migrate_object(item_id, client_account_id, client_platform):
         response_migrate = response_migrate.json()
 
         if 'error' in response_migrate:
+            print(response_migrate)
 
             if response_migrate['error'] in [1, 7, 8]:
+                code = 2
                 message = f"""Ошибка платформы мониторинга Online.Stavrack - доступ запрещен.\nПожалуйста, оставьте обращение в тех. поддержку!"""
-                return message
+                return {'code': code, 'message': message}
 
             if response_migrate['error'] in [5, 6]:
+                code = 2
                 message = f"""Ошибка платформы мониторинга Online.Stavrack - ошибка выполнения запроса.\nПожалуйста, попробуйте позднее либо оставьте обращение в тех. поддержку!"""
-                return message
+                return {'code': code, 'message': message}
 
             if response_migrate['error'] == 1002:
+                code = 2
                 message = f"""Ошибка платформы мониторинга Online.Stavrack №1002 - Элемент с таким ID зарегистрирован в другом сервисе.\nПожалуйста, оставьте обращение в тех. поддержку!"""
-                return message
+                return {'code': code, 'message': message}
 
             else:
+                code = 2
                 message = f"""Ошибка платформы мониторинга Online.Stavrack №{response_migrate['error']}. \nПожалуйста, оставьте обращение в тех. поддержку!"""
+                return {'code': code, 'message': message}
         else:
+             code = 1
              message = 'OK'
-             return message
+             return {'code': code, 'message': message}
 
 
 def create_wialon_object_wrapper(device_id, label, model, client_sys_id, client_account_id, client_platform):
@@ -200,7 +208,6 @@ def create_wialon_object_wrapper(device_id, label, model, client_sys_id, client_
     uid = update_device_id(item_id, device_id, model, client_platform)
     response_update = update_access_item(client_sys_id, item_id, client_platform)
     response_migrate = migrate_object(item_id, client_account_id, client_platform)
-    print(response_migrate)
 
     if 'Ошибка' in str(item_id):
         return item_id

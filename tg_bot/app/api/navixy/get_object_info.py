@@ -222,9 +222,10 @@ async def navixy_get_object_info(device_id):
                         else:
                             location = location['value']
 
-                        description = f"""Информация по объекту с ID {device_id} с платформы My.Stavtrack:\nИмя объекта: {
-                            name}\nДата и время последнего сообщения: {
-                            date_signal}\nМестоположение: {location}\nСтатус: {connection_status}\nОператор: {
+                        description = f"""Информация по объекту с ID {device_id} с платформы My.Stavtrack:\nМестоположение: {
+                            location}\nДата и время последнего сообщения: {
+                            date_signal}\n\nИмя объекта: {
+                            name}\nСтатус: {connection_status}\nОператор: {
                             network_name}\nЗаряд АКБ: {battery_level}
                         """
                         message = {'code': 'send_data', 'description': description}

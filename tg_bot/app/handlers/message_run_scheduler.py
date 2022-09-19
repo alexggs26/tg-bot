@@ -1,6 +1,6 @@
-# from tg_bot.app.scheduler import job
+from tg_bot.app.scheduler import job
 
 
-# async def run_scheduler():
-    # job()
+async def run_scheduler():
+    job()
 

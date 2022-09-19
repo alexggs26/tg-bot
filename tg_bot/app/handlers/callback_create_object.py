@@ -51,6 +51,7 @@ async def create_object_wialon(call: CallbackQuery, callback_data: dict):
                 label=device_name,
                 model=hw_id, 
                 client_platform=client_platform)
+            print(response)
 
             if response['code'] == 1:
                 start_ts = timegm(gmtime())
@@ -62,12 +63,12 @@ async def create_object_wialon(call: CallbackQuery, callback_data: dict):
                     if 'Ошибка' in tracker_info or 'не найден' in tracker_info or tracker_info['code'] == 'no_signal':
 
                         if ((timegm(gmtime()) - start_ts) // 60) > 0:
-                            response = f"""Устройство не ответило на команды, проверяю подключение...\nПрошло {
+                            response = f"""Устройство c ID {device_id} не ответило на команды, проверяю подключение...\nПрошло {
                                (timegm(gmtime()) - start_ts) // 60} минут {(timegm(gmtime()) - start_ts) % 60} секунд..."""
                             await bot.edit_message_text(chat_id=call.message.chat.id, message_id=message_answer.message_id, text=response)
 
                         elif ((timegm(gmtime()) - start_ts) // 60) == 0:
-                            response = f"""Устройство не ответило на команды, проверяю подключение...\nПрошло {
+                            response = f"""Устройство c ID {device_id} не ответило на команды, проверяю подключение...\nПрошло {
                                 timegm(gmtime()) - start_ts} секунд..."""
                             await bot.edit_message_text(chat_id=call.message.chat.id, message_id=message_answer.message_id, text=response)
 
@@ -79,7 +80,7 @@ async def create_object_wialon(call: CallbackQuery, callback_data: dict):
                 tracker_info = wialon_get_object_info(device_id, client_platform)
 
                 if 'Ошибка' in tracker_info or 'не найден' in tracker_info or tracker_info['code'] == 'no_signal':
-                    final_message = f'С объектом {device_id} связаться не удалось. Пожалуйста, проверьте подключение/настройки либо оставьте обращение в тех. поддержку!'
+                    final_message = f'С объектом с ID {device_id} связаться не удалось. Пожалуйста, проверьте подключение/настройки либо оставьте обращение в тех. поддержку!'
                     await bot.send_message(chat_id=call.message.chat.id, text=final_message, reply_markup=button_kb)
                     return None
             

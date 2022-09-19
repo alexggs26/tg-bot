@@ -5,7 +5,7 @@ from tg_bot.app.dbworker import Storage
  
 
 def update_token():
-    accounts = ['stavros', 'stavros2']
+    accounts = ['stavros', 'stavros2', 'stavros_kz']
     for acc in accounts:
         with Session() as s:
             try:
@@ -25,8 +25,8 @@ def update_token():
                         "duration": 0,
                         "flags": 6,
                         "sign": sign,
-                        "login": config.WIALON_STAVROS_LOGIN if acc == 'stavros' else config.WIALON_STAVROS2_LOGIN,
-                        "passw": config.WIALON_STAVROS_PW if acc == 'stavros' else config.WIALON_STAVROS2_PW
+                        "login": config.WIALON_STAVROS_LOGIN if acc == 'stavros' else (config.WIALON_STAVROS2_LOGIN if acc == 'stavros2' else config.WIALON_STAVROS_KZ_LOGIN),
+                        "passw": config.WIALON_STAVROS_PW if acc == 'stavros' else (config.WIALON_STAVROS2_PW if acc == 'stavros2' else config.WIALON_STAVROS_KZ_PW)
                     }
                 )
                 token = dict(parse.parse_qsl(parse.urlsplit(response.url).query))["access_token"]

@@ -25,7 +25,8 @@ def get_wialon_users():
 
     token_stavros = Storage.get_token('stavros')
     token_stavros2 = Storage.get_token('stavros2')
-    tokens = [token_stavros, token_stavros2]
+    token_stavroz_kz = Storage.get_token('stavros_kz')
+    tokens = [token_stavros, token_stavros2, token_stavroz_kz]
 
     num = 1
     for token in tokens:
@@ -75,7 +76,7 @@ def get_wialon_users():
                                     i['crt'],
                                     i['bact'], 
                                     i[j][l]['v'],
-                                    'stavros' if num == 1 else 'stavros2'
+                                    'stavros' if num == 1 else ('stavros2' if num == 2 else 'stavros_kz')
                                 ])
 
         users_info = DataFrame(objects_info, columns=[

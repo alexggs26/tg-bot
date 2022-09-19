@@ -4,7 +4,7 @@ from tg_bot.app.states import States
 from tg_bot.app.dbworker import Storage
 from tg_bot.app.keyboard_builder import send_page
 from tg_bot.app.api.navixy.create_navixy_user import create_user
-# from tg_bot.app.handlers.message_run_scheduler import run_scheduler
+from tg_bot.app.handlers.message_run_scheduler import run_scheduler
 
 
 @dp.message_handler(lambda message: Storage.get_state(message.from_user.id) == States.S_ENTER_ACCOUNT_ID.value)
@@ -14,27 +14,35 @@ async def check_client_id(message: Message):
     await message.answer('Проверяю заказ-наряд...')
     await run_scheduler()
     result = Storage.get_client_id(task_id)
+    company_id = Storage.get_crm_company_id(task_id)
 
     if result == None:
-        await bot.send_message(chat_id=message.chat.id, text='Клиент по данному заказ-наряду не найден в системе мониторинга. Создаю учетную запись...')
-        client_sys_id = create_user(result[0])
-        await send_page(message.chat.id, 'navixy')
-        message_client_sys_id = client_sys_id
-        message_platform = 'navixy'
+        if company_id[0] != None:
+            await bot.send_message(chat_id=message.chat.id, text='Клиент по данному заказ-наряду не найден в системе мониторинга. Создаю учетную запись...')
+            client_sys_id = create_user(company_id[0])
+            await send_page(message.chat.id, 'navixy')
+            message_client_sys_id = client_sys_id
+            message_platform = 'navixy'
 
-        if type(message_client_sys_id) != int:
-            await bot.send_message(chat_id=message.chat.id, text=message_client_sys_id)
-            return None
+            if type(message_client_sys_id) != int:
+                await bot.send_message(chat_id=message.chat.id, text=message_client_sys_id)
+                return None    
+
+            else:
+                data = {
+                    'user_id': message.from_user.id,
+                    'client_sys_id': message_client_sys_id,
+                    'client_platform': message_platform
+                }
+                query = Storage.query_builder(data['user_id'], data, type='update_client_info')
+                response = Storage.execute_query(query, type='update_client_info')
+                await run_scheduler()
+                return None
 
         else:
-            data = {
-                'user_id': message.from_user.id,
-                'client_sys_id': message_client_sys_id,
-                'client_platform': message_platform
-            }
-            query = Storage.query_builder(data['user_id'], data, type='update_client_info')
-            response = Storage.execute_query(query, type='update_client_info')
-            await run_scheduler()
+            text_message = """Заказ-наряд не найден в базе данных!\n\nПожалуста, проверьте правильность введенного заказ-наряда
+            """
+            await bot.send_message(chat_id=messagde.chat.id, text=text_message)
             return None
 
     elif result[2] == 'navixy':

@@ -29,6 +29,7 @@ async def build_ticket(call: CallbackQuery):
 @dp.message_handler(content_types=['contact'])
 async def process_ticket(message: Message):
     phone = message.contact.phone_number
+    print(phone)
     Storage.set_phone(message.from_user.id, phone)
     await bot.send_message(
         chat_id=message.chat.id, 
