@@ -11,6 +11,14 @@ page_cb = CallbackData("text", "platform", "num")
 hw_cb = CallbackData("hw", "id", "platform")
 
 
+def build_answer_for_create():
+    button_yes = InlineKeyboardButton(text='Да', callback_data='create_yes')
+    button_no = InlineKeyboardButton(text='Нет', callback_data='create_no')
+    keyboard = InlineKeyboardMarkup()
+    keyboard.add(button_yes)
+    keyboard.add(button_no)
+    return keyboard
+
 
 def build_ok_button():
     button_ok = InlineKeyboardButton(text='Готово', callback_data='start')

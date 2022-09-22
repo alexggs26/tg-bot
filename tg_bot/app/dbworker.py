@@ -108,6 +108,30 @@ class Storage():
 
 
     @staticmethod
+    def get_smt_code(user_id):
+        query = f"""
+            SELECT smt_code
+            FROM {DB_TABLE}
+            WHERE user_id = '{user_id}'
+        """
+        code = Storage.execute_query(query, type='read_one')
+        if code == None:
+            return code
+        else:
+            return code[0]
+
+
+    @staticmethod
+    def set_smt_code(user_id, code):
+        query = f"""
+            UPDATE {DB_TABLE}
+            SET smt_code = '{code}'
+            WHERE user_id = '{user_id}'
+        """
+        Storage.execute_query(query, type='update')
+        return None
+        
+    @staticmethod
     def get_client_id(task_id):
         query = f"""
             SELECT crm_client_id, sys_client_id, platform
@@ -193,10 +217,31 @@ class Storage():
         return result
 
     @staticmethod
+    def get_task(user_id):
+        query = f"""
+            SELECT task_id
+            FROM {DB_TABLE}
+            WHERE user_id = '{user_id}'
+        """
+        result = Storage.execute_query(query, type='read_one')
+        return result[0]
+
+    @staticmethod
+    def set_task(user_id, task_id):
+        query = f"""
+            UPDATE {DB_TABLE}
+            SET task_id = '{task_id}'
+            WHERE user_id = '{user_id}'
+        """
+        Storage.execute_query(query, type='update')
+        return None
+
+
+    @staticmethod
     def query_builder(user_id, data, type):
         if type == 'read':
             query = f"""
-                SELECT chat_id, state, phone, device_id, hw_id, client_sys_id, client_platform
+                SELECT chat_id, state, phone, device_id, hw_id, client_sys_id, client_platform, task_id
                 FROM {DB_TABLE}
                 WHERE user_id = {user_id}
             """

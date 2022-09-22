@@ -11,8 +11,7 @@ def wialon_get_object_info(device_id, account):
     response_sid = get_sid(account)
 
     if 'Ошибка' in response_sid:
-        message = response_sid
-        return message
+        return {'code': 'platform_error', 'message': response_sid}
     else:
         try:
             sid = response_sid['sid']
@@ -129,14 +128,13 @@ def wialon_get_object_info(device_id, account):
                                     return message
                             else:   
                                 location = location[0]
-                                code = 'send_data'
                                 description = f"""
                                     Информация по объекту с ID {device_id} с платформы Online.Stavtrack:\n\nМестоположение: {
                                         location}\nДата и время последнего сообщения: {
                                         date_signal}\n\nИмя объекта: {
                                         name}\nПараметры:\n{parameters}
                                 """
-                                message = {'code': code, 'description': description}
+                                message = {'code': 'send_data', 'description': description}
                                 return message
                     
                     else:

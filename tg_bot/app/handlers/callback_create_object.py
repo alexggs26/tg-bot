@@ -2,15 +2,17 @@ from tg_bot.loader import bot, dp
 from asyncio import sleep
 from calendar import timegm
 from time import gmtime
+from nest_asyncio import apply as nest_asyncio_apply
 from aiogram.types.message import Message
 from aiogram.types.callback_query import CallbackQuery
 from tg_bot.app.dbworker import Storage
 from tg_bot.app.states import States
 from tg_bot.app.api.navixy.create_navixy_object import create_navixy_object
-from tg_bot.app.api.navixy.get_object_info import navixy_get_object_info
 from tg_bot.app.api.wialon.create_wialon_object import create_wialon_object_wrapper
-from tg_bot.app.api.wialon.get_object_info import wialon_get_object_info
+from tg_bot.app.functions.check_device_navixy import check_device_navixy_wrapper
+from tg_bot.app.functions.check_device_wialon import check_device_wialon_wrapper
 from tg_bot.app.keyboard_builder import build_ok_button, hw_cb
+from tg_bot.app.api.bitrix.send_comment import comment
 
 
 
@@ -35,6 +37,7 @@ async def create_object_wialon(call: CallbackQuery, callback_data: dict):
         device_id = db_response[3]
         client_sys_id = db_response[5]
         client_platform = db_response[6]
+        task_id = db_response[7]
         device_name = f"telegram_bot-{device_id}"
 
         button_kb = build_ok_button()
@@ -51,38 +54,21 @@ async def create_object_wialon(call: CallbackQuery, callback_data: dict):
                 label=device_name,
                 model=hw_id, 
                 client_platform=client_platform)
-            print(response)
 
             if response['code'] == 1:
-                start_ts = timegm(gmtime())
-                message_answer = await bot.send_message(chat_id=call.message.chat.id, text='Проверяю подключение...')
-
-                while (timegm(gmtime()) - start_ts) < 900:
-                    tracker_info = wialon_get_object_info(device_id, client_platform)
-
-                    if 'Ошибка' in tracker_info or 'не найден' in tracker_info or tracker_info['code'] == 'no_signal':
-
-                        if ((timegm(gmtime()) - start_ts) // 60) > 0:
-                            response = f"""Устройство c ID {device_id} не ответило на команды, проверяю подключение...\nПрошло {
-                               (timegm(gmtime()) - start_ts) // 60} минут {(timegm(gmtime()) - start_ts) % 60} секунд..."""
-                            await bot.edit_message_text(chat_id=call.message.chat.id, message_id=message_answer.message_id, text=response)
-
-                        elif ((timegm(gmtime()) - start_ts) // 60) == 0:
-                            response = f"""Устройство c ID {device_id} не ответило на команды, проверяю подключение...\nПрошло {
-                                timegm(gmtime()) - start_ts} секунд..."""
-                            await bot.edit_message_text(chat_id=call.message.chat.id, message_id=message_answer.message_id, text=response)
-
-                    else:
-                        await bot.send_message(chat_id=call.message.chat.id, text=tracker_info)
-
-                    await sleep(30)
-
-                tracker_info = wialon_get_object_info(device_id, client_platform)
-
-                if 'Ошибка' in tracker_info or 'не найден' in tracker_info or tracker_info['code'] == 'no_signal':
-                    final_message = f'С объектом с ID {device_id} связаться не удалось. Пожалуйста, проверьте подключение/настройки либо оставьте обращение в тех. поддержку!'
-                    await bot.send_message(chat_id=call.message.chat.id, text=final_message, reply_markup=button_kb)
-                    return None
+                answer = await check_device_wialon_wrapper(
+                    device_id=device_id,
+                    chat_id=call.message.chat.id,
+                    user_id=call.from_user.id,
+                    platform=client_platform
+                )
+                
+                """
+                Метод не работает, см. комментарии в документации:
+                https://dev.1c-bitrix.ru/rest_help/tasks/task/commentitem/add.php
+                """
+                # nest_asyncio_apply()
+                # comment(task_id, answer)
             
             elif 'Ошибка' in response:
                 await bot.send_message(chat_id=call.message.chat.id, text=response, reply_markup=button_kb)
@@ -105,6 +91,7 @@ async def create_object_navixy(message: Message):
         device_id = db_response[3]
         hw_id = db_response[4]
         client_sys_id = db_response[5]
+        task_id = db_response[7]
         device_name = f"telegram_bot-{device_id}"
         button_kb = build_ok_button()
 
@@ -116,35 +103,18 @@ async def create_object_navixy(message: Message):
             phone_device=phone_device)
 
         if 'создан' in response:
-            start_ts = timegm(gmtime())
-            message_answer = await bot.send_message(chat_id=message.chat.id, text='Проверяю подключение...')
+            answer = await check_device_navixy_wrapper(
+                device_id=device_id,
+                chat_id=call.message.chat.id,
+                user_id=call.from_user.id
+            )
+            """
+                Метод не работает, см. комментарии в документации:
+                https://dev.1c-bitrix.ru/rest_help/tasks/task/commentitem/add.php
+            """
 
-            while (timegm(gmtime()) - start_ts) < 900:
-                tracker_info = await navixy_get_object_info(device_id)
-
-                if 'Ошибка' in tracker_info or tracker_info == None or 'не найден' in tracker_info or 'не выходил на связь' in tracker_info :
-
-                    if ((timegm(gmtime()) - start_ts) // 60) > 0:
-                        response = f"""Устройство не ответило на команды, проверяю подключение...\nПрошло {
-                            (timegm(gmtime()) - start_ts) // 60} минут {(timegm(gmtime()) - start_ts) % 60} секунд..."""
-                        await bot.edit_message_text(chat_id=message.chat.id, message_id=message_answer.message_id, text=response)
-
-                    elif ((timegm(gmtime()) - start_ts) // 60) == 0:
-                        response = f"""Устройство не ответило на команды, проверяю подключение...\nПрошло {
-                            timegm(gmtime()) - start_ts} секунд..."""
-                        await bot.edit_message_text(chat_id=message.chat.id, message_id=message_answer.message_id, text=response)
-
-                else:
-                    await bot.send_message(chat_id=message.chat.id, text=tracker_info)
-
-                await sleep(30)
-
-            tracker_info = await navixy_get_object_info(device_id)
-            
-            if 'Ошибка' in tracker_info or tracker_info == None or 'не найден' in tracker_info or 'не выходил на связь' in tracker_info:
-                final_message = f'С объектом {device_id} связаться не удалось. Пожалуйста, проверьте подключение/настройки либо оставьте обращение в тех. поддержку!'
-                await bot.send_message(chat_id=message.chat.id, text=final_message, reply_markup=button_kb)
-                return None
+            # nest_asyncio_apply()
+            # comment(task_id, answer)
 
         elif 'Ошибка' in response:
             await bot.send_message(chat_id=message.chat.id, text=response, reply_markup=button_kb)

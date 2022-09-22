@@ -32,6 +32,7 @@ def create_wialon_object(label, model, client_platform):
 
         else:
             response = response.json()
+
             if 'error' in response:
                 if response['error'] in [1, 7, 8]:
                     code = 2
@@ -54,7 +55,9 @@ def create_wialon_object(label, model, client_platform):
 
 
 def update_device_id(new_object_id, device_id, model, client_platform):
-    sid = get_sid(client_platform)
+
+    mgr_platform = 'stavros_mgr' if client_platform == 'stavros' else('stavros_mgr2' if client_platform == 'stavros2' else 'stavros_kz')
+    sid = get_sid(mgr_platform)
     sid = sid['sid']
     data_update = {
         'itemId': new_object_id,
@@ -62,12 +65,13 @@ def update_device_id(new_object_id, device_id, model, client_platform):
         'uniqueId': str(device_id)
     }   
     try:
-        response_update = requests_get(
+        response_update = post(
             url='https://hst-api.wialon.com/wialon/ajax.html?svc=unit/update_device_type',
             headers={"content-type": "application/x-www-form-urlencoded"},
             data={"params": dumps(data_update), "sid": sid}
         )
         response_update = response_update.json()
+
     except Timeout:
             message = f'Ошибка соединения: превышено время ожидания сервера'
             return message
@@ -99,8 +103,9 @@ def update_device_id(new_object_id, device_id, model, client_platform):
 
 
 def update_access_item(client_sys_id, item_id, client_platform):
-
-    sid = get_sid(client_platform)
+    
+    mgr_platform = 'stavros_mgr' if client_platform == 'stavros' else('stavros_mgr2' if client_platform == 'stavros2' else 'stavros_kz')
+    sid = get_sid(mgr_platform)
     sid = sid['sid']
     data_update_item_access = {
         "userId": client_sys_id,
@@ -126,8 +131,8 @@ def update_access_item(client_sys_id, item_id, client_platform):
 
     else:
         response_update_access = response_update_access.json()
+
         if 'error' in response_update_access:
-            print(response_update_access)
 
             if response_update_access['error'] in [1, 7, 8]:
                 code = 2
@@ -152,7 +157,8 @@ def update_access_item(client_sys_id, item_id, client_platform):
 
 def migrate_object(item_id, client_account_id, client_platform):
 
-    sid = get_sid(client_platform)
+    mgr_platform = 'stavros_mgr' if client_platform == 'stavros' else('stavros_mgr2' if client_platform == 'stavros2' else 'stavros_kz')
+    sid = get_sid(mgr_platform)
     sid = sid['sid']
     data_migrate_object = {
         "itemId": item_id,
@@ -176,7 +182,6 @@ def migrate_object(item_id, client_account_id, client_platform):
         response_migrate = response_migrate.json()
 
         if 'error' in response_migrate:
-            print(response_migrate)
 
             if response_migrate['error'] in [1, 7, 8]:
                 code = 2

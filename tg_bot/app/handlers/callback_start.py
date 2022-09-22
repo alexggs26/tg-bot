@@ -5,7 +5,7 @@ from aiogram.types.callback_query import CallbackQuery
 from aiogram.types.inline_keyboard import InlineKeyboardMarkup, InlineKeyboardButton
 
 
-@dp.callback_query_handler(text="start")
+@dp.callback_query_handler(lambda call: call.data=="start" or call.data=="create_no")
 async def show_main_menu(call: CallbackQuery):
     keyboard = InlineKeyboardMarkup(row_width=1)
     keyboard.add(

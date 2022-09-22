@@ -5,8 +5,7 @@ from tg_bot.app.dbworker import Storage
  
 
 def update_token():
-    accounts = ['stavros', 'stavros2', 'stavros_kz']
-    for acc in accounts:
+    for acc in config.PLATFORMS_WIALON:
         with Session() as s:
             try:
                 response = get(url="http://hosting.wialon.com/login.html")

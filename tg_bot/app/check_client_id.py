@@ -10,76 +10,82 @@ from tg_bot.app.handlers.message_run_scheduler import run_scheduler
 @dp.message_handler(lambda message: Storage.get_state(message.from_user.id) == States.S_ENTER_ACCOUNT_ID.value)
 async def check_client_id(message: Message):
 
-    task_id = message.text
-    await message.answer('Проверяю заказ-наряд...')
-    await run_scheduler()
-    result = Storage.get_client_id(task_id)
-    company_id = Storage.get_crm_company_id(task_id)
+    if message.text.isdigit() == False:
+        await message.answer('Номер заказ-наряда должен состоять только из цифр')
 
-    if result == None:
-        if company_id[0] != None:
-            await bot.send_message(chat_id=message.chat.id, text='Клиент по данному заказ-наряду не найден в системе мониторинга. Создаю учетную запись...')
-            client_sys_id = create_user(company_id[0])
-            await send_page(message.chat.id, 'navixy')
-            message_client_sys_id = client_sys_id
-            message_platform = 'navixy'
+    else:
+        task_id = message.text
+        await message.answer('Проверяю заказ-наряд...')
+        await run_scheduler()
+        result = Storage.get_client_id(task_id)
+        company_id = Storage.get_crm_company_id(task_id)
+        Storage.set_task(message.from_user.id, task_id)
 
-            if type(message_client_sys_id) != int:
-                await bot.send_message(chat_id=message.chat.id, text=message_client_sys_id)
-                return None    
+
+        if result == None:
+            if company_id[0] != None:
+                await bot.send_message(chat_id=message.chat.id, text='Клиент по данному заказ-наряду не найден в системе мониторинга. Создаю учетную запись...')
+                client_sys_id = create_user(company_id[0])
+                await send_page(message.chat.id, 'navixy')
+                message_client_sys_id = client_sys_id
+                message_platform = 'navixy'
+
+                if type(message_client_sys_id) != int:
+                    await bot.send_message(chat_id=message.chat.id, text=message_client_sys_id)
+                    return None    
+
+                else:
+                    data = {
+                        'user_id': message.from_user.id,
+                        'client_sys_id': message_client_sys_id,
+                        'client_platform': message_platform
+                    }
+                    query = Storage.query_builder(data['user_id'], data, type='update_client_info')
+                    response = Storage.execute_query(query, type='update_client_info')
+                    await run_scheduler()
+                    return None
 
             else:
-                data = {
-                    'user_id': message.from_user.id,
-                    'client_sys_id': message_client_sys_id,
-                    'client_platform': message_platform
-                }
-                query = Storage.query_builder(data['user_id'], data, type='update_client_info')
-                response = Storage.execute_query(query, type='update_client_info')
-                await run_scheduler()
+                text_message = """Заказ-наряд не найден в базе данных!\n\nПожалуста, проверьте правильность введенного заказ-наряда
+                """
+                await bot.send_message(chat_id=messagde.chat.id, text=text_message)
                 return None
 
-        else:
-            text_message = """Заказ-наряд не найден в базе данных!\n\nПожалуста, проверьте правильность введенного заказ-наряда
-            """
-            await bot.send_message(chat_id=messagde.chat.id, text=text_message)
+        elif result[2] == 'navixy':
+            await bot.send_message(
+                chat_id=message.chat.id,
+                text="""
+                    Клиент по данному заказ-наряду найден в системе мониторинга My.Stavtrack!\nДля занесения объекта на сервер выберите тип устройства
+                """)
+            await send_page(message.chat.id, 'navixy')
+            client_sys_id = result[1]
+            client_platform = 'navixy'
+            data = {
+                'user_id': message.from_user.id,
+                'client_sys_id': client_sys_id,
+                'client_platform': client_platform
+            }
+            query = Storage.query_builder(data['user_id'], data, type='update_client_info')
+            response = Storage.execute_query(query, type='update_client_info')
             return None
 
-    elif result[2] == 'navixy':
-        await bot.send_message(
-            chat_id=message.chat.id,
-            text="""
-                Клиент по данному заказ-наряду найден в системе мониторинга My.Stavtrack!\nДля занесения объекта на сервер выберите тип устройства
-            """)
-        await send_page(message.chat.id, 'navixy')
-        client_sys_id = result[1]
-        client_platform = 'navixy'
-        data = {
-            'user_id': message.from_user.id,
-            'client_sys_id': client_sys_id,
-            'client_platform': client_platform
-        }
-        query = Storage.query_builder(data['user_id'], data, type='update_client_info')
-        response = Storage.execute_query(query, type='update_client_info')
-        return None
-
-    elif (result[2] == 'stavros' or result[2] == 'stavros2'):
-        await bot.send_message(
-            chat_id=message.chat.id,
-            text="""
-                Клиент по данному заказ-наряду найден в системе мониторинга Online.Stavtrack!\nДля занесения объекта на сервер выберите тип устройства
-            """)
-        await send_page(message.chat.id, 'wialon')
-        client_sys_id = result[1]
-        client_platform = result[2]
-        data = {
-            'user_id': message.from_user.id,
-            'client_sys_id': client_sys_id,
-            'client_platform': client_platform
-        }
-        query = Storage.query_builder(data['user_id'], data, type='update_client_info')
-        Storage.execute_query(query, type='update_client_info')
-        return None
+        elif (result[2] == 'stavros' or result[2] == 'stavros2'):
+            await bot.send_message(
+                chat_id=message.chat.id,
+                text="""
+                    Клиент по данному заказ-наряду найден в системе мониторинга Online.Stavtrack!\nДля занесения объекта на сервер выберите тип устройства
+                """)
+            await send_page(message.chat.id, 'wialon')
+            client_sys_id = result[1]
+            client_platform = result[2]
+            data = {
+                'user_id': message.from_user.id,
+                'client_sys_id': client_sys_id,
+                'client_platform': client_platform
+            }
+            query = Storage.query_builder(data['user_id'], data, type='update_client_info')
+            Storage.execute_query(query, type='update_client_info')
+            return None
 
 
 def register_check_client_id(dp):

@@ -9,7 +9,7 @@ def navixy_get_panel_info(device_id):
     response_hash = get_hash()
     if 'Ошибка' in response_hash:
         message = response_hash
-        return message
+        return {'code': 'platfrom_error', 'description': message}
 
     else:
         try:
@@ -31,19 +31,19 @@ def navixy_get_panel_info(device_id):
 
         except Timeout:
             description = f'Ошибка соединения: превышено время ожидания сервера'
-            message = {'code': 'network_error', 'desctiption': description}
+            message = {'code': 'network_error', 'description': description}
             return message
 
         except ConnectionError:
             description = f'Ошибка соединения: - {ConnectionError}'
-            message = {'code': 'network_error', 'desctiption': description}
+            message = {'code': 'network_error', 'description': description}
             return message
         
         else:
             tracker_object = tracker_object.json()
             if tracker_object['success'] == False:
                 if tracker_object['status']['code'] == 201:
-                    message = None
+                    message = {'code': 'platform_error'}
                     return message
 
                 else:
@@ -69,7 +69,7 @@ def navixy_get_panel_info(device_id):
 def navixy_get_backend_user_hash(device_id):
 
     tracker_info = navixy_get_panel_info(device_id)
-    if tracker_info == None:
+    if tracker_info == None or 'error' in tracker_info:
         return tracker_info
 
     if not tracker_info:
@@ -80,7 +80,7 @@ def navixy_get_backend_user_hash(device_id):
         if tracker_info['success'] == True:
             response_hash = get_hash()
             if 'Ошибка' in response_hash:
-                message = response_hash
+                message = {'code': 'platform_error', 'desctiption': response_hash}
                 return message
             else: 
                 data={
@@ -108,7 +108,7 @@ def navixy_get_backend_user_hash(device_id):
                     user_hash = user_hash.json()
                     if user_hash['success'] == False:
                         if user_hash['status']['code'] == 201:
-                            message = None
+                            message = {'code': 'not_exist'}
                             return message
                         else:     
                             code_platform = user_hash['status']['code']
@@ -175,61 +175,74 @@ async def navixy_get_object_info(device_id):
                     return message
 
             else:
-                if datetime.strptime(response['state']['gps']['updated'], '%Y-%m-%d %H:%M:%S') > datetime(1970, 1, 1, 0, 0, 0):
-                    name = tracker_info['label']
-                    date_signal = response['state']['gps']['updated']
-                    gps_lat = response['state']['gps']['location']['lat']
-                    gps_lon = response['state']['gps']['location']['lng']
-                    connection_status = response['state']['connection_status']
-                    network_name = response['state']['gsm']['network_name']
-                    battery_level = response['state']['battery_level']
-                    
-                    params = {
-                        'hash': tracker_info['hash'],
-                        'location': {
-                            'lat': gps_lat,
-                            'lng': gps_lon
-                        },
-                        'geocoder': 'yandex',
-                        'lang': 'ru',
-                        'with_details': False
-                    }
+                if response['state']['gps']['updated'] != None:
+                    if datetime.strptime(response['state']['gps']['updated'], '%Y-%m-%d %H:%M:%S') > datetime(1970, 1, 1, 0, 0, 0):
+                        name = tracker_info['label']
+                        date_signal = response['state']['gps']['updated']
+                        gps_lat = response['state']['gps']['location']['lat']
+                        gps_lon = response['state']['gps']['location']['lng']
+                        connection_status = response['state']['connection_status']
+                        network_name = response['state']['gsm']['network_name']
+                        battery_level = response['state']['battery_level']
+                        
+                        params = {
+                            'hash': tracker_info['hash'],
+                            'location': {
+                                'lat': gps_lat,
+                                'lng': gps_lon
+                            },
+                            'geocoder': 'yandex',
+                            'lang': 'ru',
+                            'with_details': False
+                        }
 
-                    try:
-                        location = post(
-                            url='https://panel.navixy.ru/api-v2/geocoder/search_location',
-                            headers={'Content-Type': 'application/json'},
-                            data=dumps(params)
-                    )
-                    except Timeout:
-                        description = f'Ошибка соединения: превышено время ожидания сервера'
-                        message = {'code': 'network_error', 'desctiption': description}
-                        return message
+                        try:
+                            location = post(
+                                url='https://panel.navixy.ru/api-v2/geocoder/search_location',
+                                headers={'Content-Type': 'application/json'},
+                                data=dumps(params)
+                        )
+                        except Timeout:
+                            description = f'Ошибка соединения: превышено время ожидания сервера'
+                            message = {'code': 'network_error', 'desctiption': description}
+                            return message
 
-                    except ConnectionError:
-                        description = f'Ошибка соединения: - {ConnectionError}'
-                        message = {'code': 'network_error', 'desctiption': description}
-                        return message
+                        except ConnectionError:
+                            description = f'Ошибка соединения: - {ConnectionError}'
+                            message = {'code': 'network_error', 'desctiption': description}
+                            return message
+
+                        else:
+                            location = location.json()
+                            if location['success'] == False:
+                                code_platform = location['status']['code']
+                                description_platform = location['status']['description']
+                                description = f'Ошибка платформы мониторинга My.Stavtrack: - код: {code_platform}, описание: {description_platform}'
+                                message = {'code': 'platform_error', 'description': description}
+                                return message
+
+                            else:
+                                location = location['value']
+
+                                description = f"""Информация по объекту с ID {device_id} с платформы My.Stavtrack:\nМестоположение: {
+                                    location}\nДата и время последнего сообщения: {
+                                    date_signal}\n\nИмя объекта: {
+                                    name}\nСтатус: {connection_status}\nОператор: {
+                                    network_name}\nЗаряд АКБ: {battery_level}
+                                """
+                                message = {'code': 'send_data', 'description': description}
+                                return message
 
                     else:
-                        location = location.json()
-                        if location['success'] == False:
-                            code_platform = location['status']['code']
-                            description_platform = location['status']['description']
-                            description = f'Ошибка платформы мониторинга My.Stavtrack: - код: {code_platform}, описание: {description_platform}'
-                            message = {'code': 'platform_error', 'description': description}
-                            return message
-                        else:
-                            location = location['value']
-
-                        description = f"""Информация по объекту с ID {device_id} с платформы My.Stavtrack:\nМестоположение: {
-                            location}\nДата и время последнего сообщения: {
-                            date_signal}\n\nИмя объекта: {
-                            name}\nСтатус: {connection_status}\nОператор: {
-                            network_name}\nЗаряд АКБ: {battery_level}
-                        """
-                        message = {'code': 'send_data', 'description': description}
-                        return message
+                        name = tracker_info['label']
+                        date_signal = 'Не выходил на связь'
+                        connection_status = response['state']['connection_status']
+                        description = f"""Информация по объекту с ID {device_id} с платформы My.Stavtrack:\nИмя объекта: {
+                                name}\nДата и время последнего сообщения: {
+                                date_signal}\nСтатус: {connection_status}
+                            """
+                        message = {'code': 'no_signal', 'description': description}
+                        return message    
 
                 else:
                     name = tracker_info['label']
