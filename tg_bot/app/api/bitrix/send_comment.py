@@ -10,7 +10,7 @@ def comment(task_id, object_info) -> None:
         comment_object = {
             'TASK_ID': task_id,
             'FIELDS': {
-                'AUTHOR_ID': 851,
+                'AUTHOR_ID': 'author_id',
                 'POST_MESSAGE': f'Результат проверки через бот проверок: \n\n{object_info}'
             }
         }
