@@ -15,8 +15,8 @@ def create_ticket(phone, user_name):
         'fields': {
             'TITLE': title,
             'DESCRIPTION': text,
-            'GROUP_ID': 241,
-            'RESPONSIBLE_ID': 851,
+            'GROUP_ID': 'group_id',
+            'RESPONSIBLE_ID': 'responsible_id',
             'DEADLINE': deadline
         }
     }
@@ -25,7 +25,7 @@ def create_ticket(phone, user_name):
     task_id = response['task']['id']
     method_send_message = 'im.message.add'
     text_message = f"""
-        Новый тикет через бот проверок:\nhttps://portal.stavtrack.ru/company/personal/user/1/tasks/task/view/{task_id}/
+        Новый тикет через бот проверок:\n BASE_URL/{task_id}/
     """
     params_send_message = {
         'DIALOG_ID': BITRIX_CHAT_ID,
